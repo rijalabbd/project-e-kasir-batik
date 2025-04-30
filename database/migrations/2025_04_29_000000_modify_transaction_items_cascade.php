@@ -1,0 +1,33 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('transaction_items', function (Blueprint $table) {
+            // Pertama–tama drop FK lama
+            $table->dropForeign(['product_id']);
+
+            // Kemudian buat FK baru dengan onDelete('cascade')
+            $table->foreign('product_id')
+                  ->references('id')
+                  ->on('products')
+                  ->onDelete('cascade');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('transaction_items', function (Blueprint $table) {
+            $table->dropForeign(['product_id']);
+            $table->foreign('product_id')
+                  ->references('id')
+                  ->on('products');
+        });
+    }
+};
+    

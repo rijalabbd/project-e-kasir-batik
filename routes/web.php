@@ -2,11 +2,12 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ReceiptController;
+use App\Http\Controllers\ProductController;
 
 /*
-|--------------------------------------------------------------------------
+|----------------------------------------------------------------------
 | Web Routes
-|--------------------------------------------------------------------------
+|----------------------------------------------------------------------
 |
 | Here is where you can register web routes for your application. These
 | routes are loaded by the RouteServiceProvider and all of them will
@@ -17,4 +18,9 @@ use App\Http\Controllers\ReceiptController;
 Route::get('/', function () {
     return view('welcome');
 });
-Route::get('/receipt/print/{transactionId}', [App\Http\Controllers\ReceiptController::class, 'print'])->name('receipt.print');
+
+// Rute untuk mencetak struk
+Route::get('/receipt/print/{transactionId}', [ReceiptController::class, 'print'])->name('receipt.print');
+
+// Rute untuk mengelola produk
+Route::resource('products', ProductController::class);

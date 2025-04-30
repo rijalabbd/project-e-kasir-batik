@@ -4,14 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 use Picqer\Barcode\BarcodeGeneratorPNG;
-
 
 class Product extends Model
 {
     use HasFactory;
-
-    protected $table = 'products'; // Sesuaikan dengan nama tabel di database
 
     protected $fillable = [
         'nama',
@@ -19,26 +17,32 @@ class Product extends Model
         'stok',
         'gambar',
         'barcode',
+        'barcode_image',
+        'is_preorder',
+        'preorder_available_date',
     ];
 
-    protected static function boot()
+    protected static function booted()
     {
-        parent::boot();
-
-        static::creating(function ($product) {
-            $generator = new BarcodeGeneratorPNG();
-            $barcode = rand(1000000000, 9999999999); // Generate kode barcode unik
-            $barcodePath = public_path('storage/barcodes');
-
-            if (!file_exists($barcodePath)) {
-                mkdir($barcodePath, 0777, true);
+        static::creating(function (Product $product) {
+            // 1) Generate angka barcode jika belum ada
+            if (! $product->barcode) {
+                $product->barcode = (string) rand(1_000_000_000, 9_999_999_999);
             }
 
-            file_put_contents("$barcodePath/{$barcode}.png", $generator->getBarcode($barcode, $generator::TYPE_CODE_128));
+            // 2) Buat data PNG barcode
+            $generator = new BarcodeGeneratorPNG();
+            $pngData   = $generator->getBarcode(
+                $product->barcode,
+                $generator::TYPE_CODE_128
+            );
 
-            $product->barcode = $barcode;
-            $product->barcode_image = "storage/barcodes/{$barcode}.png"; // Simpan path gambar barcode
+            // 3) Simpan ke storage/app/public/barcodes/
+            $filename = "{$product->barcode}.png";
+            Storage::disk('public')->put("barcodes/{$filename}", $pngData);
+
+            // 4) Isi kolom dengan path relatif
+            $product->barcode_image = "barcodes/{$filename}";
         });
     }
 }
-
